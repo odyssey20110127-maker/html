@@ -1,49 +1,212 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HTML Playground</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HTML Studio</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#0b1020;color:#edf2ff;font:14px system-ui,sans-serif}header{padding:14px 18px;background:#111a2e;border-bottom:1px solid #2b3853;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.brand{font-size:18px;font-weight:bold}button{padding:9px 12px;border:1px solid #344461;border-radius:9px;background:#1b2946;color:#fff;cursor:pointer;margin:2px}button.primary{background:#8aa4ff;color:#10172b;font-weight:bold}main{padding:16px;max-width:1500px;margin:auto}h1{font-size:21px;margin:0 0 4px}p,.muted{color:#9aabc8;font-size:12px}.layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;min-height:70vh}.panel{display:flex;flex-direction:column;min-width:0;background:#121a2d;border:1px solid #2b3853;border-radius:12px;overflow:hidden}.head{padding:12px;border-bottom:1px solid #2b3853;font-weight:bold;display:flex;justify-content:space-between;align-items:center}.drop{margin:12px;padding:12px;text-align:center;border:1px dashed #53688e;border-radius:9px}.drop p{margin:4px}.drop button{margin-top:8px}textarea{margin:0 12px 12px;width:calc(100% - 24px);flex:1;min-height:300px;resize:vertical;background:#080d18;color:#e0e9ff;border:1px solid #344461;border-radius:9px;padding:12px;font:12px/1.6 monospace}iframe{width:100%;flex:1;min-height:420px;border:0;background:white}.controls,.previewcontrols{padding:0 10px 10px}.foot{padding:9px 12px;border-top:1px solid #2b3853;color:#9aabc8;font-size:11px}#file{display:none}body.full{overflow:hidden}body.full header,body.full .intro,body.full .editor,body.full .note{display:none}body.full main{padding:0;margin:0;max-width:none;width:100vw;height:100vh;height:100dvh}body.full .layout{display:block;width:100%;height:100%;min-height:0;margin:0}body.full .preview{display:flex;width:100%;height:100%;min-height:0;border:0;border-radius:0}body.full .preview .head,body.full .preview .previewcontrols,body.full .preview .foot{display:none}body.full iframe{display:block;width:100%;height:100%;min-height:0;flex:1;border:0}@media(max-width:800px){.layout{grid-template-columns:1fr}.editor{min-height:550px}iframe{min-height:55vh}header{align-items:flex-start;flex-direction:column}}
-body.full .return-editor{display:flex}
-.return-editor{display:none;position:fixed;right:12px;bottom:12px;z-index:9999;align-items:center;justify-content:center;gap:5px;width:58px;height:30px;padding:0;border:1px solid #ffffff55;border-radius:16px;background:#17233dcc;color:#fff;font:11px system-ui,sans-serif;opacity:.48;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 2px 10px #0003}
-.return-editor:active,.return-editor:focus-visible{opacity:1;outline:2px solid #8aa4ff;outline-offset:2px}
-@media(hover:hover){.return-editor:hover{opacity:1}}
+:root{color-scheme:dark;--bg:#0d1117;--panel:#161b22;--panel2:#1f2630;--line:#303946;--text:#e6edf3;--muted:#8b949e;--blue:#2f81f7;--green:#238636}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select{font:inherit}button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:7px;padding:7px 10px;cursor:pointer}button:hover{border-color:#687789;background:#293342}button.primary{background:var(--blue);border-color:var(--blue);color:white;font-weight:600}button.green{background:var(--green);border-color:var(--green);color:white}
+.topbar{height:54px;display:flex;align-items:center;gap:10px;padding:0 14px;background:#010409;border-bottom:1px solid var(--line)}
+.logo{font-weight:700;font-size:16px;white-space:nowrap}.logo span{color:#79c0ff}.project-name{color:var(--muted);font-size:12px;margin-left:5px}
+.top-actions{margin-left:auto;display:flex;gap:6px;align-items:center}.top-actions button{font-size:12px}
+.workspace{height:calc(100dvh - 54px);display:grid;grid-template-columns:230px minmax(300px,1fr) minmax(300px,1fr);min-height:450px}
+.sidebar{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.side-head,.pane-head{height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid var(--line);font-size:12px;font-weight:700;color:#c9d1d9}
+.side-tools{display:flex;gap:4px}.iconbtn{padding:4px 7px;font-size:13px}
+.file-tree{padding:8px 6px;overflow:auto;flex:1}.tree-item{width:100%;display:flex;align-items:center;gap:7px;text-align:left;border:0;background:transparent;padding:7px 8px;border-radius:5px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tree-item.active{background:#1f6feb33;color:#79c0ff}.tree-item .fname{overflow:hidden;text-overflow:ellipsis}.tree-item .ficon{width:15px;text-align:center;color:var(--muted)}
+.sidebar-foot{border-top:1px solid var(--line);padding:9px;color:var(--muted);font-size:11px;line-height:1.5}
+.editor-pane,.preview-pane{min-width:0;display:flex;flex-direction:column;background:var(--bg)}
+.editor-pane{border-right:1px solid var(--line)}
+.tabs{height:39px;display:flex;align-items:stretch;background:#0d1117;border-bottom:1px solid var(--line);overflow:auto}
+.tab{border:0;border-right:1px solid var(--line);border-radius:0;background:transparent;padding:0 13px;font-size:12px;white-space:nowrap;color:var(--muted)}
+.tab.active{background:var(--bg);color:var(--text);border-top:2px solid #f78166}
+.editor-toolbar{height:38px;display:flex;align-items:center;gap:6px;padding:0 9px;border-bottom:1px solid var(--line)}
+.editor-toolbar .path{font:11px ui-monospace,monospace;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:auto}
+#code{flex:1;width:100%;min-height:0;resize:none;border:0;outline:0;background:#0d1117;color:#d2e3fc;padding:14px;font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;tab-size:2;white-space:pre;overflow:auto}
+.search-panel{border-top:1px solid var(--line);padding:9px;background:var(--panel);max-height:180px;display:flex;flex-direction:column}
+.search-row{display:flex;gap:6px}.search-row input,.dialog input{min-width:0;flex:1;background:#0d1117;border:1px solid var(--line);color:var(--text);padding:8px;border-radius:6px}
+.search-results{overflow:auto;color:var(--muted);font-size:11px;margin-top:6px}.hit{display:block;width:100%;text-align:left;margin:3px 0;font-size:11px;padding:6px}
+.preview-head{height:42px;display:flex;align-items:center;gap:8px;padding:0 10px;border-bottom:1px solid var(--line)}
+.preview-head strong{font-size:12px}.preview-head .spacer{flex:1}.device-label{font-size:11px;color:var(--muted)}
+#preview{border:0;background:white;width:100%;flex:1;min-height:0}
+.statusbar{height:25px;border-top:1px solid var(--line);display:flex;align-items:center;padding:0 10px;color:var(--muted);font-size:10px;gap:12px}
+.empty{color:var(--muted);font-size:12px;padding:12px;line-height:1.6}
+#htmlInput{display:none}
+.overlay{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;padding:18px;z-index:20}.overlay.open{display:flex}.dialog{width:min(420px,100%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 18px 60px #0009}.dialog h2{font-size:17px;margin:0 0 8px}.dialog p{font-size:12px;color:var(--muted);line-height:1.5}.dialog-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:15px}
+body.full .topbar,body.full .sidebar,body.full .editor-pane{display:none}body.full .workspace{display:block;height:100dvh}body.full .preview-pane{height:100dvh}body.full .preview-head{height:36px}body.full .return-edit{display:block}
+.return-edit{display:none;position:fixed;right:12px;bottom:12px;z-index:10;opacity:.65;border-radius:18px;background:#161b22dd}
+@media(max-width:900px){.workspace{grid-template-columns:170px minmax(260px,1fr)}.preview-pane{grid-column:1/-1;min-height:45vh}.workspace{height:auto;min-height:calc(100dvh - 54px)}.sidebar,.editor-pane{min-height:55vh}#code{min-height:360px}}
+@media(max-width:620px){.topbar{height:auto;min-height:54px;flex-wrap:wrap;padding:8px}.top-actions{width:100%;margin:0;overflow:auto}.workspace{display:flex;flex-direction:column;height:auto}.sidebar{min-height:180px;max-height:230px;border-right:0;border-bottom:1px solid var(--line)}.editor-pane{min-height:520px;border-right:0;border-bottom:1px solid var(--line)}.preview-pane{height:65vh;min-height:420px}.preview-head{position:sticky;top:0}}
 </style>
 </head>
 <body>
-<header><div class="brand">⌘ HTML Playground <span class="muted">HTML / CSS / JavaScript</span></div><div><button id="open">HTMLを開く</button><button id="save">HTMLを保存</button><button id="full" class="primary">⛶ フルスクリーン</button><button id="exit" hidden>全画面を終了</button></div></header>
-<main><div class="intro"><h1>HTMLを読み込んで実行</h1><p>ファイルを選択するか、コードを編集して実行・更新してください。</p></div>
-<div class="layout">
-<section class="panel editor"><div class="head">ソースコード <span class="muted" id="filename">サンプル.html</span></div><div class="drop" id="drop"><strong>HTMLファイルをここにドロップ</strong><p>.html / .htm に対応</p><button id="choose" class="primary">ファイルを選択</button></div><textarea id="code" spellcheck="false" aria-label="HTMLソースコード"></textarea><div class="controls"><button id="run" class="primary">▶ 実行・更新</button><button id="reset">サンプルに戻す</button><button id="clear">コードを消去</button></div></section>
-<section class="panel preview"><div class="head">プレビュー <span class="muted" id="status">準備完了</span></div><div class="previewcontrols"><button id="refresh">↻ 更新</button></div><iframe id="preview" title="HTMLプレビュー" sandbox="allow-scripts allow-forms allow-modals allow-popups" referrerpolicy="no-referrer"></iframe><div class="foot" id="last">ブラウザ内で実行されます</div></section>
-</div><p class="note">HTML内に書かれたCSS・JavaScriptは反映されます。別ファイルのCSS・JSや画像は、パスなどによって読み込めない場合があります。信頼できないコードは実行しないでください。</p></main>
-<button type="button" class="return-editor" id="returnEditor" aria-label="編集画面に戻る" title="編集画面に戻る">✎ 編集</button>
-<input id="file" type="file" accept=".html,.htm,text/html">
+<header class="topbar">
+  <div class="logo">⌘ <span>HTML</span> Studio <span class="project-name" id="projectLabel">Untitled Project</span></div>
+  <div class="top-actions">
+    <button id="openFiles">ファイルを追加</button><button id="newFile">＋ 新規ファイル</button>
+    <button id="saveFile">保存</button><button id="exportZip" class="green">ZIPを書き出す</button>
+    <button id="runTop" class="primary">▶ 実行</button><button id="fullTop">⛶ 全画面</button>
+  </div>
+</header>
+<div class="workspace">
+  <aside class="sidebar">
+    <div class="side-head"><span>EXPLORER</span><div class="side-tools"><button class="iconbtn" id="addFileBtn" title="ファイルを追加">＋</button><button class="iconbtn" id="folderBtn" title="フォルダごと追加">▣</button></div></div>
+    <div id="fileTree" class="file-tree"><div class="empty">ファイルを追加するか、新規ファイルを作成してください。</div></div>
+    <div class="sidebar-foot">プロジェクト内の相対パスを使って、HTML・CSS・JS・画像をまとめて管理できます。</div>
+  </aside>
+  <section class="editor-pane">
+    <div class="tabs" id="tabs"><div class="empty">ファイル未選択</div></div>
+    <div class="editor-toolbar"><span class="path" id="activePath">ファイルを選択してください</span><button class="iconbtn" id="renameFile">名前変更</button><button class="iconbtn" id="deleteFile">削除</button></div>
+    <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="ここにコードを書きます"></textarea>
+    <div class="search-panel">
+      <div class="search-row"><input id="searchInput" type="search" placeholder="プロジェクト内を検索…"><button id="searchBtn">検索</button></div>
+      <div class="search-results" id="searchResults">すべてのテキストファイルから文字列を検索できます。</div>
+    </div>
+  </section>
+  <section class="preview-pane">
+    <div class="preview-head"><strong>プレビュー</strong><span class="device-label" id="previewPage">index.html</span><span class="spacer"></span><button id="refresh">↻ 更新</button><button id="fullPreview">⛶</button></div>
+    <iframe id="preview" title="サイトプレビュー" sandbox="allow-scripts allow-forms allow-modals allow-popups" referrerpolicy="no-referrer"></iframe>
+    <div class="statusbar"><span id="status">準備完了</span><span id="fileStats">0 files</span><span>ローカルプレビュー</span></div>
+  </section>
+</div>
+<button class="return-edit" id="returnEdit">✎ 編集に戻る</button>
+<input id="htmlInput" type="file" multiple>
+<div class="overlay" id="renameDialog"><div class="dialog"><h2>ファイル名を変更</h2><p>拡張子も含めて新しい名前を入力してください。例：pages/about.html</p><input id="renameName" placeholder="新しいファイル名"><div class="dialog-actions"><button id="cancelRename">キャンセル</button><button class="primary" id="confirmRename">変更する</button></div></div></div>
+<div class="overlay" id="newDialog"><div class="dialog"><h2>新規ファイル</h2><p>例：index.html / css/style.css / js/app.js / images/icon.svg</p><input id="newName" placeholder="ファイル名（例: about.html）"><div class="dialog-actions"><button id="cancelNew">キャンセル</button><button class="primary" id="createNew">作成</button></div></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
-(function(){
-const sample = `<!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>サンプル</title>
-<style>body{font-family:system-ui,sans-serif;min-height:100vh;margin:0;display:grid;place-items:center;background:linear-gradient(135deg,#dbeafe,#fce7f3);color:#222}.card{background:white;padding:32px;border-radius:20px;text-align:center;box-shadow:0 15px 40px #33415522;max-width:360px;margin:20px}h1{color:#6258d8}button{background:#6258d8;color:white;border:0;padding:12px 18px;border-radius:10px;cursor:pointer}body.full .return-editor{display:flex}
-.return-editor{display:none;position:fixed;right:12px;bottom:12px;z-index:9999;align-items:center;justify-content:center;gap:5px;width:58px;height:30px;padding:0;border:1px solid #ffffff55;border-radius:16px;background:#17233dcc;color:#fff;font:11px system-ui,sans-serif;opacity:.48;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 2px 10px #0003}
-.return-editor:active,.return-editor:focus-visible{opacity:1;outline:2px solid #8aa4ff;outline-offset:2px}
-@media(hover:hover){.return-editor:hover{opacity:1}}
-</style></head>
-<body><main class="card"><h1>こんにちは！ 👋</h1><p>HTML・CSS・JavaScriptが動いています。</p><button id="hello">クリックしてね</button><p id="result"></p></main>
-<script>document.querySelector('#hello').addEventListener('click',function(){document.querySelector('#result').textContent='JavaScriptも正常に動作中！ 🎉';});<\/script>
+(()=>{
+const $=id=>document.getElementById(id);
+const files=new Map();
+let active=null, openTabs=[], objectUrls=[];
+const starter=`<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My first site</title><link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main class="card">
+  <h1>こんにちは！</h1>
+  <p>これは複数ファイル対応のサンプルサイトです。</p>
+  <a href="about.html">別のHTMLページへ移動 →</a>
+  <button id="hello">クリックしてね</button><p id="result"></p>
+</main>
+<script src="js/app.js"><\/script>
 </body></html>`;
-const $=id=>document.getElementById(id);let filename='サンプル.html';
-function run(){ $('preview').srcdoc=$('code').value;$('status').textContent='実行しました';$('last').textContent='最終更新: '+new Date().toLocaleTimeString('ja-JP');}
-function load(f){if(!f)return;if(!/\.html?$/i.test(f.name)&&f.type!=='text/html'){alert('HTMLファイルを選択してください');return;}const r=new FileReader();r.onload=()=>{$('code').value=String(r.result||'');filename=f.name;$('filename').textContent=filename;run();};r.onerror=()=>alert('読み込みに失敗しました');r.readAsText(f);}
-$('code').value=sample;run();$('open').onclick=$('choose').onclick=()=>$('file').click();$('file').onchange=e=>{load(e.target.files[0]);e.target.value='';};$('run').onclick=$('refresh').onclick=run;
-$('reset').onclick=()=>{$('code').value=sample;filename='サンプル.html';$('filename').textContent=filename;run();};
-$('clear').onclick=()=>{if(confirm('コードを空にしますか？')){$('code').value='';run();}};
-$('save').onclick=()=>{const a=document.createElement('a');const u=URL.createObjectURL(new Blob([$('code').value],{type:'text/html;charset=utf-8'}));a.href=u;a.download=filename||'index.html';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);};
-$('full').onclick=()=>{document.body.classList.add('full');$('full').hidden=true;$('exit').hidden=false;};
-function leaveFullscreen(){document.body.classList.remove('full');$('full').hidden=false;$('exit').hidden=true;}
-$('exit').onclick=leaveFullscreen;$('returnEditor').onclick=leaveFullscreen;
-document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();run();}if(e.key==='Escape')$('exit').click();});
-const d=$('drop');['dragenter','dragover'].forEach(t=>d.addEventListener(t,e=>{e.preventDefault();d.style.borderColor='#8aa4ff';}));['dragleave','drop'].forEach(t=>d.addEventListener(t,e=>{e.preventDefault();d.style.borderColor='';}));d.addEventListener('drop',e=>load(e.dataTransfer.files[0]));
+const about=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>About</title><link rel="stylesheet" href="css/style.css"></head><body><main class="card"><h1>別ページ！</h1><p>index.html からリンクで移動できました。</p><a href="index.html">← トップへ戻る</a></main></body></html>`;
+files.set("index.html",starter);
+files.set("about.html",about);
+files.set("css/style.css",`body{font-family:system-ui,sans-serif;background:#edf2ff;color:#1f2937;min-height:100vh;display:grid;place-items:center;margin:0}.card{background:white;padding:32px;border-radius:18px;box-shadow:0 12px 36px #22335522;max-width:520px;margin:20px}h1{color:#6258d8}a{color:#245dcc}button{padding:10px 15px;border:0;border-radius:9px;background:#6258d8;color:white;margin:10px 0}`);
+files.set("js/app.js",`document.querySelector('#hello')?.addEventListener('click',()=>{document.querySelector('#result').textContent='外部JavaScriptも動いています！ 🎉';});`);
+function safePath(path){const parts=[];for(const part of path.replace(/\\\\/g,'/').split('/')){if(!part||part==='.')continue;if(part==='..'){parts.pop();continue;}parts.push(part);}return parts.join('/');}
+function dirname(path){const i=path.lastIndexOf('/');return i<0?'':path.slice(0,i+1);}
+function resolvePath(base,ref){try{const clean=ref.split(/[?#]/)[0];if(!clean)return base;return safePath((clean.startsWith('/')?'':dirname(base))+decodeURIComponent(clean));}catch(e){return safePath(dirname(base)+ref);}}
+function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function ext(path){return (path.split('.').pop()||'').toLowerCase();}
+function isText(path){return ['html','htm','css','js','mjs','json','txt','svg','xml','md','csv'].includes(ext(path));}
+function renderTree(){
+ const tree=$('fileTree');tree.innerHTML='';
+ if(!files.size){tree.innerHTML='<div class="empty">ファイルがありません。</div>';return;}
+ const names=[...files.keys()].sort((a,b)=>a.localeCompare(b));
+ const folders=new Set();names.forEach(n=>{const p=n.split('/');for(let i=1;i<p.length;i++)folders.add(p.slice(0,i).join('/'));});
+ const entries=[...folders].map(path=>({path,folder:true,depth:path.split('/').length-1})).concat(names.map(path=>({path,folder:false,depth:path.split('/').length-1}))).sort((a,b)=>a.path.localeCompare(b.path)||Number(a.folder)-Number(b.folder));
+ // Draw each file once; folder headings are visual separators.
+ let shown=new Set();
+ for(const e of entries){if(e.folder){const d=document.createElement('div');d.className='tree-item';d.style.paddingLeft=(8+e.depth*12)+'px';d.style.color='#8b949e';d.innerHTML='<span class="ficon">▾</span><span class="fname"></span>';d.querySelector('.fname').textContent=e.path.split('/').pop();tree.appendChild(d);continue;}
+ if(shown.has(e.path))continue;shown.add(e.path);
+ const b=document.createElement('button');b.className='tree-item'+(e.path===active?' active':'');b.style.paddingLeft=(8+e.depth*12)+'px';
+ const icon=ext(e.path)==='html'?'🌐':['css'].includes(ext(e.path))?'🎨':['js','mjs'].includes(ext(e.path))?'📜':['png','jpg','jpeg','gif','webp','svg'].includes(ext(e.path))?'🖼':'📄';
+ const i=document.createElement('span');i.className='ficon';i.textContent=icon;
+ const n=document.createElement('span');n.className='fname';n.textContent=e.path.split('/').pop();b.title=e.path;b.append(i,n);b.onclick=()=>selectFile(e.path);tree.appendChild(b);
+ }
+ $('fileStats').textContent=files.size+' files';
+}
+function renderTabs(){const tabs=$('tabs');tabs.innerHTML='';openTabs=openTabs.filter(n=>files.has(n));if(!openTabs.length){tabs.innerHTML='<div class="empty">ファイル未選択</div>';return;}openTabs.forEach(n=>{const b=document.createElement('button');b.className='tab'+(n===active?' active':'');b.textContent=n.split('/').pop();b.title=n;b.onclick=()=>selectFile(n);tabs.appendChild(b);});}
+function selectFile(path){if(!files.has(path))return;sync();active=path;if(!openTabs.includes(path))openTabs.push(path);$('code').value=isText(path)?files.get(path):'[このファイルはテキスト編集できません。プレビューでは読み込めます。]';$('code').readOnly=!isText(path);$('activePath').textContent=path;renderTree();renderTabs();}
+function sync(){if(active&&files.has(active)&&isText(active)&&!$('code').readOnly)files.set(active,$('code').value);}
+function addFile(path,content){path=safePath(path);if(!path)return;files.set(path,content);}
+function fileFromUpload(f){return new Promise(resolve=>{const path=safePath(f.webkitRelativePath||f.name);const r=new FileReader();r.onload=()=>{addFile(path,r.result);resolve(path);};r.onerror=()=>resolve(null);r.readAsArrayBuffer(f);});}
+async function upload(list){const arr=[...list];for(const f of arr)await fileFromUpload(f);if(arr.length){const first=safePath(arr[0].webkitRelativePath||arr[0].name);renderTree();if(files.has(first))selectFile(first);$('status').textContent=arr.length+'個のファイルを追加しました';}}
+function clearUrls(){objectUrls.forEach(u=>URL.revokeObjectURL(u));objectUrls=[];}
+function makeUrl(path){const value=files.get(path);if(value===undefined)return null;const blob=value instanceof ArrayBuffer?new Blob([value],{type:mime(path)}):new Blob([value],{type:mime(path)});const url=URL.createObjectURL(blob);objectUrls.push(url);return url;}
+function mime(path){const e=ext(path);return ({html:'text/html',htm:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript',json:'application/json',svg:'image/svg+xml',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',txt:'text/plain',xml:'application/xml',woff:'font/woff',woff2:'font/woff2'})[e]||'application/octet-stream';}
+function rewriteCss(css,base){return css.replace(/url\\((\\s*)(['"]?)(?!data:|https?:|blob:|#)([^)'"]+)\\2(\\s*)\\)/gi,(all,sp,q,ref,tail)=>{const p=resolvePath(base,ref.trim());const u=makeUrl(p);return u?`url(${sp}${q}${u}${q}${tail})`:all;});}
+function renderPage(path){
+ sync();if(!files.has(path)){ $('status').textContent='ページが見つかりません: '+path;return;}
+ clearUrls();$('previewPage').textContent=path;
+ let source=files.get(path);if(source instanceof ArrayBuffer){$('status').textContent='HTMLファイルではありません';return;}source=String(source);
+ // Map local linked assets to Blob URLs, and route local HTML anchors within the preview.
+ source=source.replace(/(<link\\b[^>]*?href\\s*=\\s*)(["'])([^"']+)\\2/gi,(all,start,q,ref)=>{
+   if(/^(https?:|data:|blob:|#|\\/\\/)/i.test(ref))return all;
+   const target=resolvePath(path,ref);const content=files.get(target);
+   if(content===undefined)return all;
+   if(['css'].includes(ext(target))){const css=rewriteCss(String(content),target);const u=URL.createObjectURL(new Blob([css],{type:'text/css'}));objectUrls.push(u);return start+q+u+q;}
+   const u=makeUrl(target);return u?start+q+u+q:all;
+ });
+ source=source.replace(/(<script\\b[^>]*?src\\s*=\\s*)(["'])([^"']+)\\2/gi,(all,start,q,ref)=>{
+   if(/^(https?:|data:|blob:|#|\\/\\/)/i.test(ref))return all;
+   const target=resolvePath(path,ref),u=makeUrl(target);return u?start+q+u+q:all;
+ });
+ source=source.replace(/\\b(src|poster)\\s*=\\s*(["'])(?!https?:|data:|blob:|\\/\\/|#)([^"']+)\\2/gi,(all,attr,q,ref)=>{
+   const target=resolvePath(path,ref),u=makeUrl(target);return u?`${attr}=${q}${u}${q}`:all;
+ });
+ source=source.replace(/\\bhref\\s*=\\s*(["'])(?!https?:|data:|blob:|\\/\\/|#|mailto:|tel:)([^"']+\\.html?(?:[?#][^"']*)?)\\1/gi,(all,q,ref)=>{
+   const target=resolvePath(path,ref);return files.has(target)?`href="#__pg__${encodeURIComponent(target)}"`:all;
+ });
+ const bridge=`<script>
+ document.addEventListener('click',function(e){const a=e.target.closest&&e.target.closest('a[href^="#__pg__"]');if(!a)return;e.preventDefault();parent.postMessage({type:'pg-navigate',path:decodeURIComponent(a.getAttribute('href').slice(7))},'*');});
+ <\\/script>`;
+ if(/<\\/body\\s*>/i.test(source))source=source.replace(/<\\/body\\s*>/i,bridge+'</body>');else source+=bridge;
+ $('preview').srcdoc=source;$('status').textContent='表示中: '+path;
+}
+function run(){const target=files.has('index.html')?'index.html':files.has('index.htm')?'index.htm':[...files.keys()].find(n=>['html','htm'].includes(ext(n)));if(target)renderPage(target);else $('status').textContent='HTMLファイルがありません';}
+$('preview').addEventListener('load',()=>{});
+window.addEventListener('message',e=>{if(e.source!==$('preview').contentWindow||e.data?.type!=='pg-navigate')return;renderPage(safePath(e.data.path));});
+$('code').addEventListener('input',()=>{sync();$('status').textContent='未保存の変更';});
+$('openFiles').onclick=$('addFileBtn').onclick=()=>$('htmlInput').click();
+$('folderBtn').onclick=()=>{$('htmlInput').setAttribute('webkitdirectory','');$('htmlInput').click();setTimeout(()=>$('htmlInput').removeAttribute('webkitdirectory'),1000);};
+$('htmlInput').onchange=e=>{upload(e.target.files);e.target.value='';};
+$('newFile').onclick=$('createNew').onclick=()=>{if($('newDialog').classList.contains('open')){const n=safePath($('newName').value.trim());if(!n){alert('ファイル名を入力してください');return;}if(files.has(n)&&!confirm('同じ名前のファイルがあります。上書きしますか？'))return;addFile(n,n.endsWith('.html')?'<!doctype html>\\n<html lang="ja"><head><meta charset="utf-8"><title>New page</title></head><body><h1>新しいページ</h1></body></html>':'');$('newDialog').classList.remove('open');$('newName').value='';renderTree();selectFile(n);return;}$('newDialog').classList.add('open');$('newName').focus();};
+$('cancelNew').onclick=()=>$('newDialog').classList.remove('open');
+$('renameFile').onclick=()=>{
+ if(!active)return;
+ $('renameName').value=active;
+ $('renameDialog').classList.add('open');
+ $('renameName').focus();
+ $('renameName').select();
+};
+$('cancelRename').onclick=()=>$('renameDialog').classList.remove('open');
+$('confirmRename').onclick=()=>{
+ if(!active)return;
+ const next=safePath($('renameName').value.trim());
+ if(!next){alert('新しいファイル名を入力してください');return;}
+ if(next===active){$('renameDialog').classList.remove('open');return;}
+ if(files.has(next)&&!confirm('同じ名前のファイルがあります。上書きしますか？'))return;
+ sync();
+ const content=files.get(active);
+ files.delete(active);
+ files.set(next,content);
+ openTabs=openTabs.map(n=>n===active?next:n);
+ active=next;
+ $('renameDialog').classList.remove('open');
+ selectFile(next);
+ renderTree();
+ $('status').textContent='名前を変更しました: '+next;
+};
+$('renameName').onkeydown=e=>{if(e.key==='Enter')$('confirmRename').click();if(e.key==='Escape')$('renameDialog').classList.remove('open');};
+$('deleteFile').onclick=()=>{if(!active)return;if(!confirm(active+' を削除しますか？'))return;files.delete(active);openTabs=openTabs.filter(n=>n!==active);active=openTabs[openTabs.length-1]||null;if(active)selectFile(active);else{$('code').value='';$('activePath').textContent='ファイルを選択してください';renderTabs();renderTree();}};
+$('saveFile').onclick=()=>{sync();if(!active)return;const value=files.get(active);const blob=new Blob([value],{type:mime(active)});const a=document.createElement('a');const u=URL.createObjectURL(blob);a.href=u;a.download=active.split('/').pop();a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);};
+$('exportZip').onclick=async()=>{sync();if(!window.JSZip){alert('ZIPライブラリを読み込めません。ネット接続を確認してください。');return;}try{const zip=new JSZip();for(const [n,v] of files)zip.file(n,v);const blob=await zip.generateAsync({type:'blob'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='website-project.zip';a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);$('status').textContent='ZIPを書き出しました';}catch(err){alert('ZIP出力に失敗: '+err.message);}};
+function search(){sync();const q=$('searchInput').value.toLowerCase(),box=$('searchResults');box.innerHTML='';if(!q){box.textContent='検索文字列を入力してください';return;}let count=0;for(const [name,value] of files){if(!isText(name)||value instanceof ArrayBuffer)continue;String(value).split(/\\r?\\n/).forEach((line,i)=>{let pos=line.toLowerCase().indexOf(q);if(pos<0)return;count++;const b=document.createElement('button');b.className='hit';b.textContent=name+' : '+(i+1)+'行目  '+line.trim().slice(0,100);b.onclick=()=>{selectFile(name);$('code').focus();$('code').setSelectionRange(Math.max(0,String(value).split(/\\r?\\n/).slice(0,i).join('\\n').length+(i?1:0)+pos),Math.max(0,String(value).split(/\\r?\\n/).slice(0,i).join('\\n').length+(i?1:0)+pos)+q.length);};box.appendChild(b);});}if(!count)box.textContent='見つかりませんでした';else{const s=document.createElement('div');s.textContent=count+'件';box.prepend(s);}}
+$('searchBtn').onclick=search;$('searchInput').onkeydown=e=>{if(e.key==='Enter')search();};
+$('runTop').onclick=$('refresh').onclick=run;
+function full(){document.body.classList.add('full');}function exitFull(){document.body.classList.remove('full');}
+$('fullTop').onclick=$('fullPreview').onclick=full;$('returnEdit').onclick=exitFull;document.addEventListener('keydown',e=>{if(e.key==='Escape')exitFull();});
+selectFile('index.html');renderTree();run();
 })();
 </script>
-</body></html>
+</body>
+</html>
