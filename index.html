@@ -146,9 +146,16 @@ function renderPage(path){
    if(['css'].includes(ext(target))){const css=rewriteCss(String(content),target);const u=URL.createObjectURL(new Blob([css],{type:'text/css'}));objectUrls.push(u);return start+q+u+q;}
    const u=makeUrl(target);return u?start+q+u+q:all;
  });
- source=source.replace(/(<script\b[^>]*?src\s*=\s*)(["'])([^"']+)\2/gi,(all,start,q,ref)=>{
+ // Inline local JavaScript instead of loading it from a Blob URL.
+ // The sandboxed preview has an opaque origin; Safari can block parent-created
+ // Blob scripts there, so embedding local script contents is more reliable.
+ source=source.replace(/<script\b([^>]*?)\bsrc\s*=\s*(["'])([^"']+)\2([^>]*)>([\s\S]*?)<\/script\s*>/gi,(all,before,q,ref,after,inner)=>{
    if(/^(https?:|data:|blob:|#|\/\/)/i.test(ref))return all;
-   const target=resolvePath(path,ref),u=makeUrl(target);return u?start+q+u+q:all;
+   const target=resolvePath(path,ref),content=files.get(target);
+   if(content===undefined)return all;
+   const code=content instanceof ArrayBuffer?new TextDecoder().decode(content):String(content);
+   const attrs=(before+' '+after).replace(/\s+src\s*=\s*(["'])[^"']*\1/i,'');
+   return '<script'+attrs+'>'+code.replace(/<\/script/gi,'<\\/script')+'<'+'/script>';
  });
  source=source.replace(/\b(src|poster)\s*=\s*(["'])(?!https?:|data:|blob:|\/\/|#)([^"']+)\2/gi,(all,attr,q,ref)=>{
    const target=resolvePath(path,ref),u=makeUrl(target);return u?`${attr}=${q}${u}${q}`:all;
