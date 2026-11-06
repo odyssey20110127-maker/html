@@ -28,17 +28,17 @@ button,input,select{font:inherit}button{border:1px solid var(--line);background:
 .search-panel{border-top:1px solid var(--line);padding:9px;background:var(--panel);max-height:180px;display:flex;flex-direction:column}
 .search-row{display:flex;gap:6px}.search-row input,.dialog input{min-width:0;flex:1;background:#0d1117;border:1px solid var(--line);color:var(--text);padding:8px;border-radius:6px}
 .search-results{overflow:auto;color:var(--muted);font-size:11px;margin-top:6px}.hit{display:block;width:100%;text-align:left;margin:3px 0;font-size:11px;padding:6px}
-.preview-head{height:42px;display:flex;align-items:center;gap:8px;padding:0 10px;border-bottom:1px solid var(--line)}
+.preview-head{display:none}
 .preview-head strong{font-size:12px}.preview-head .spacer{flex:1}.device-label{font-size:11px;color:var(--muted)}
 #preview{border:0;background:white;width:100%;flex:1;min-height:0}
-.statusbar{height:25px;border-top:1px solid var(--line);display:flex;align-items:center;padding:0 10px;color:var(--muted);font-size:10px;gap:12px}
+.statusbar{display:none}
 .empty{color:var(--muted);font-size:12px;padding:12px;line-height:1.6}
 #htmlInput{display:none}
 .overlay{position:fixed;inset:0;background:#0009;display:none;align-items:center;justify-content:center;padding:18px;z-index:20}.overlay.open{display:flex}.dialog{width:min(420px,100%);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 18px 60px #0009}.dialog h2{font-size:17px;margin:0 0 8px}.dialog p{font-size:12px;color:var(--muted);line-height:1.5}.dialog-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:15px}
-body.full .topbar,body.full .sidebar,body.full .editor-pane{display:none}body.full .workspace{display:block;height:100dvh}body.full .preview-pane{height:100dvh}body.full .preview-head{height:36px}body.full .return-edit{display:block}
+body.full .topbar,body.full .sidebar,body.full .editor-pane{display:none}body.full .workspace{display:block;height:100dvh}body.full .preview-pane{height:100dvh}body.full .preview-head{display:none}body.full .return-edit{display:block}
 .return-edit{display:none;position:fixed;right:12px;bottom:12px;z-index:10;opacity:.65;border-radius:18px;background:#161b22dd}
 @media(max-width:900px){.workspace{grid-template-columns:170px minmax(260px,1fr)}.preview-pane{grid-column:1/-1;min-height:45vh}.workspace{height:auto;min-height:calc(100dvh - 54px)}.sidebar,.editor-pane{min-height:55vh}#code{min-height:360px}}
-@media(max-width:620px){.topbar{height:auto;min-height:54px;flex-wrap:wrap;padding:8px}.top-actions{width:100%;margin:0;overflow:auto}.workspace{display:flex;flex-direction:column;height:auto}.sidebar{min-height:180px;max-height:230px;border-right:0;border-bottom:1px solid var(--line)}.editor-pane{min-height:520px;border-right:0;border-bottom:1px solid var(--line)}.preview-pane{height:65vh;min-height:420px}.preview-head{position:sticky;top:0}}
+@media(max-width:620px){.topbar{height:auto;min-height:54px;flex-wrap:wrap;padding:8px}.top-actions{width:100%;margin:0;overflow:auto}.workspace{display:flex;flex-direction:column;height:auto}.sidebar{min-height:180px;max-height:230px;border-right:0;border-bottom:1px solid var(--line)}.editor-pane{min-height:520px;border-right:0;border-bottom:1px solid var(--line)}.preview-pane{height:65vh;min-height:420px}.preview-head{display:none}}
 </style>
 </head>
 <body>
@@ -101,7 +101,7 @@ files.set("index.html",starter);
 files.set("about.html",about);
 files.set("css/style.css",`body{font-family:system-ui,sans-serif;background:#edf2ff;color:#1f2937;min-height:100vh;display:grid;place-items:center;margin:0}.card{background:white;padding:32px;border-radius:18px;box-shadow:0 12px 36px #22335522;max-width:520px;margin:20px}h1{color:#6258d8}a{color:#245dcc}button{padding:10px 15px;border:0;border-radius:9px;background:#6258d8;color:white;margin:10px 0}`);
 files.set("js/app.js",`document.querySelector('#hello')?.addEventListener('click',()=>{document.querySelector('#result').textContent='外部JavaScriptも動いています！ 🎉';});`);
-function safePath(path){const parts=[];for(const part of path.replace(/\\\\/g,'/').split('/')){if(!part||part==='.')continue;if(part==='..'){parts.pop();continue;}parts.push(part);}return parts.join('/');}
+function safePath(path){const parts=[];for(const part of path.replace(/\\/g,'/').split('/')){if(!part||part==='.')continue;if(part==='..'){parts.pop();continue;}parts.push(part);}return parts.join('/');}
 function dirname(path){const i=path.lastIndexOf('/');return i<0?'':path.slice(0,i+1);}
 function resolvePath(base,ref){try{const clean=ref.split(/[?#]/)[0];if(!clean)return base;return safePath((clean.startsWith('/')?'':dirname(base))+decodeURIComponent(clean));}catch(e){return safePath(dirname(base)+ref);}}
 function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -133,33 +133,33 @@ async function upload(list){const arr=[...list];for(const f of arr)await fileFro
 function clearUrls(){objectUrls.forEach(u=>URL.revokeObjectURL(u));objectUrls=[];}
 function makeUrl(path){const value=files.get(path);if(value===undefined)return null;const blob=value instanceof ArrayBuffer?new Blob([value],{type:mime(path)}):new Blob([value],{type:mime(path)});const url=URL.createObjectURL(blob);objectUrls.push(url);return url;}
 function mime(path){const e=ext(path);return ({html:'text/html',htm:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript',json:'application/json',svg:'image/svg+xml',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',txt:'text/plain',xml:'application/xml',woff:'font/woff',woff2:'font/woff2'})[e]||'application/octet-stream';}
-function rewriteCss(css,base){return css.replace(/url\\((\\s*)(['"]?)(?!data:|https?:|blob:|#)([^)'"]+)\\2(\\s*)\\)/gi,(all,sp,q,ref,tail)=>{const p=resolvePath(base,ref.trim());const u=makeUrl(p);return u?`url(${sp}${q}${u}${q}${tail})`:all;});}
+function rewriteCss(css,base){return css.replace(/url\((\s*)(['"]?)(?!data:|https?:|blob:|#)([^)'"]+)\2(\s*)\)/gi,(all,sp,q,ref,tail)=>{const p=resolvePath(base,ref.trim());const u=makeUrl(p);return u?`url(${sp}${q}${u}${q}${tail})`:all;});}
 function renderPage(path){
  sync();if(!files.has(path)){ $('status').textContent='ページが見つかりません: '+path;return;}
  clearUrls();$('previewPage').textContent=path;
  let source=files.get(path);if(source instanceof ArrayBuffer){$('status').textContent='HTMLファイルではありません';return;}source=String(source);
  // Map local linked assets to Blob URLs, and route local HTML anchors within the preview.
- source=source.replace(/(<link\\b[^>]*?href\\s*=\\s*)(["'])([^"']+)\\2/gi,(all,start,q,ref)=>{
-   if(/^(https?:|data:|blob:|#|\\/\\/)/i.test(ref))return all;
+ source=source.replace(/(<link\b[^>]*?href\s*=\s*)(["'])([^"']+)\2/gi,(all,start,q,ref)=>{
+   if(/^(https?:|data:|blob:|#|\/\/)/i.test(ref))return all;
    const target=resolvePath(path,ref);const content=files.get(target);
    if(content===undefined)return all;
    if(['css'].includes(ext(target))){const css=rewriteCss(String(content),target);const u=URL.createObjectURL(new Blob([css],{type:'text/css'}));objectUrls.push(u);return start+q+u+q;}
    const u=makeUrl(target);return u?start+q+u+q:all;
  });
- source=source.replace(/(<script\\b[^>]*?src\\s*=\\s*)(["'])([^"']+)\\2/gi,(all,start,q,ref)=>{
-   if(/^(https?:|data:|blob:|#|\\/\\/)/i.test(ref))return all;
+ source=source.replace(/(<script\b[^>]*?src\s*=\s*)(["'])([^"']+)\2/gi,(all,start,q,ref)=>{
+   if(/^(https?:|data:|blob:|#|\/\/)/i.test(ref))return all;
    const target=resolvePath(path,ref),u=makeUrl(target);return u?start+q+u+q:all;
  });
- source=source.replace(/\\b(src|poster)\\s*=\\s*(["'])(?!https?:|data:|blob:|\\/\\/|#)([^"']+)\\2/gi,(all,attr,q,ref)=>{
+ source=source.replace(/\b(src|poster)\s*=\s*(["'])(?!https?:|data:|blob:|\/\/|#)([^"']+)\2/gi,(all,attr,q,ref)=>{
    const target=resolvePath(path,ref),u=makeUrl(target);return u?`${attr}=${q}${u}${q}`:all;
  });
- source=source.replace(/\\bhref\\s*=\\s*(["'])(?!https?:|data:|blob:|\\/\\/|#|mailto:|tel:)([^"']+\\.html?(?:[?#][^"']*)?)\\1/gi,(all,q,ref)=>{
+ source=source.replace(/\bhref\s*=\s*(["'])(?!https?:|data:|blob:|\/\/|#|mailto:|tel:)([^"']+\.html?(?:[?#][^"']*)?)\1/gi,(all,q,ref)=>{
    const target=resolvePath(path,ref);return files.has(target)?`href="#__pg__${encodeURIComponent(target)}"`:all;
  });
  const bridge=`<script>
  document.addEventListener('click',function(e){const a=e.target.closest&&e.target.closest('a[href^="#__pg__"]');if(!a)return;e.preventDefault();parent.postMessage({type:'pg-navigate',path:decodeURIComponent(a.getAttribute('href').slice(7))},'*');});
- <\\/script>`;
- if(/<\\/body\\s*>/i.test(source))source=source.replace(/<\\/body\\s*>/i,bridge+'</body>');else source+=bridge;
+ <\/script>`;
+ if(/<\/body\s*>/i.test(source))source=source.replace(/<\/body\s*>/i,bridge+'</body>');else source+=bridge;
  $('preview').srcdoc=source;$('status').textContent='表示中: '+path;
 }
 function run(){const target=files.has('index.html')?'index.html':files.has('index.htm')?'index.htm':[...files.keys()].find(n=>['html','htm'].includes(ext(n)));if(target)renderPage(target);else $('status').textContent='HTMLファイルがありません';}
@@ -169,7 +169,7 @@ $('code').addEventListener('input',()=>{sync();$('status').textContent='未保�
 $('openFiles').onclick=$('addFileBtn').onclick=()=>$('htmlInput').click();
 $('folderBtn').onclick=()=>{$('htmlInput').setAttribute('webkitdirectory','');$('htmlInput').click();setTimeout(()=>$('htmlInput').removeAttribute('webkitdirectory'),1000);};
 $('htmlInput').onchange=e=>{upload(e.target.files);e.target.value='';};
-$('newFile').onclick=$('createNew').onclick=()=>{if($('newDialog').classList.contains('open')){const n=safePath($('newName').value.trim());if(!n){alert('ファイル名を入力してください');return;}if(files.has(n)&&!confirm('同じ名前のファイルがあります。上書きしますか？'))return;addFile(n,n.endsWith('.html')?'<!doctype html>\\n<html lang="ja"><head><meta charset="utf-8"><title>New page</title></head><body><h1>新しいページ</h1></body></html>':'');$('newDialog').classList.remove('open');$('newName').value='';renderTree();selectFile(n);return;}$('newDialog').classList.add('open');$('newName').focus();};
+$('newFile').onclick=$('createNew').onclick=()=>{if($('newDialog').classList.contains('open')){const n=safePath($('newName').value.trim());if(!n){alert('ファイル名を入力してください');return;}if(files.has(n)&&!confirm('同じ名前のファイルがあります。上書きしますか？'))return;addFile(n,n.endsWith('.html')?'<!doctype html>\n<html lang="ja"><head><meta charset="utf-8"><title>New page</title></head><body><h1>新しいページ</h1></body></html>':'');$('newDialog').classList.remove('open');$('newName').value='';renderTree();selectFile(n);return;}$('newDialog').classList.add('open');$('newName').focus();};
 $('cancelNew').onclick=()=>$('newDialog').classList.remove('open');
 $('renameFile').onclick=()=>{
  if(!active)return;
@@ -200,7 +200,7 @@ $('renameName').onkeydown=e=>{if(e.key==='Enter')$('confirmRename').click();if(e
 $('deleteFile').onclick=()=>{if(!active)return;if(!confirm(active+' を削除しますか？'))return;files.delete(active);openTabs=openTabs.filter(n=>n!==active);active=openTabs[openTabs.length-1]||null;if(active)selectFile(active);else{$('code').value='';$('activePath').textContent='ファイルを選択してください';renderTabs();renderTree();}};
 $('saveFile').onclick=()=>{sync();if(!active)return;const value=files.get(active);const blob=new Blob([value],{type:mime(active)});const a=document.createElement('a');const u=URL.createObjectURL(blob);a.href=u;a.download=active.split('/').pop();a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);};
 $('exportZip').onclick=async()=>{sync();if(!window.JSZip){alert('ZIPライブラリを読み込めません。ネット接続を確認してください。');return;}try{const zip=new JSZip();for(const [n,v] of files)zip.file(n,v);const blob=await zip.generateAsync({type:'blob'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='website-project.zip';a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);$('status').textContent='ZIPを書き出しました';}catch(err){alert('ZIP出力に失敗: '+err.message);}};
-function search(){sync();const q=$('searchInput').value.toLowerCase(),box=$('searchResults');box.innerHTML='';if(!q){box.textContent='検索文字列を入力してください';return;}let count=0;for(const [name,value] of files){if(!isText(name)||value instanceof ArrayBuffer)continue;String(value).split(/\\r?\\n/).forEach((line,i)=>{let pos=line.toLowerCase().indexOf(q);if(pos<0)return;count++;const b=document.createElement('button');b.className='hit';b.textContent=name+' : '+(i+1)+'行目  '+line.trim().slice(0,100);b.onclick=()=>{selectFile(name);$('code').focus();$('code').setSelectionRange(Math.max(0,String(value).split(/\\r?\\n/).slice(0,i).join('\\n').length+(i?1:0)+pos),Math.max(0,String(value).split(/\\r?\\n/).slice(0,i).join('\\n').length+(i?1:0)+pos)+q.length);};box.appendChild(b);});}if(!count)box.textContent='見つかりませんでした';else{const s=document.createElement('div');s.textContent=count+'件';box.prepend(s);}}
+function search(){sync();const q=$('searchInput').value.toLowerCase(),box=$('searchResults');box.innerHTML='';if(!q){box.textContent='検索文字列を入力してください';return;}let count=0;for(const [name,value] of files){if(!isText(name)||value instanceof ArrayBuffer)continue;String(value).split(/\r?\n/).forEach((line,i)=>{let pos=line.toLowerCase().indexOf(q);if(pos<0)return;count++;const b=document.createElement('button');b.className='hit';b.textContent=name+' : '+(i+1)+'行目  '+line.trim().slice(0,100);b.onclick=()=>{selectFile(name);$('code').focus();$('code').setSelectionRange(Math.max(0,String(value).split(/\r?\n/).slice(0,i).join('\n').length+(i?1:0)+pos),Math.max(0,String(value).split(/\r?\n/).slice(0,i).join('\n').length+(i?1:0)+pos)+q.length);};box.appendChild(b);});}if(!count)box.textContent='見つかりませんでした';else{const s=document.createElement('div');s.textContent=count+'件';box.prepend(s);}}
 $('searchBtn').onclick=search;$('searchInput').onkeydown=e=>{if(e.key==='Enter')search();};
 $('runTop').onclick=$('refresh').onclick=run;
 function full(){document.body.classList.add('full');}function exitFull(){document.body.classList.remove('full');}
