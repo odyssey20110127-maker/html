@@ -46,7 +46,7 @@ body.full .topbar,body.full .sidebar,body.full .editor-pane{display:none}body.fu
   <div class="logo">⌘ <span>HTML</span> Studio <span class="project-name" id="projectLabel">Untitled Project</span></div>
   <div class="top-actions">
     <button id="openFiles">ファイルを追加</button><button id="newFile">＋ 新規ファイル</button>
-    <button id="saveFile">保存</button><button id="exportZip" class="green">ZIPを書き出す</button>
+    <button id="saveFile">保存</button><button id="clearAll" title="プロジェクト内の全ファイルを削除">全ファイル削除</button><button id="exportZip" class="green">ZIPを書き出す</button>
     <button id="runTop" class="primary">▶ 実行</button><button id="fullTop">⛶ 全画面</button>
   </div>
 </header>
@@ -97,10 +97,12 @@ const starter=`<!doctype html>
 <script src="js/app.js"><\/script>
 </body></html>`;
 const about=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>About</title><link rel="stylesheet" href="css/style.css"></head><body><main class="card"><h1>別ページ！</h1><p>index.html からリンクで移動できました。</p><a href="index.html">← トップへ戻る</a></main></body></html>`;
-files.set("index.html",starter);
-files.set("about.html",about);
-files.set("css/style.css",`body{font-family:system-ui,sans-serif;background:#edf2ff;color:#1f2937;min-height:100vh;display:grid;place-items:center;margin:0}.card{background:white;padding:32px;border-radius:18px;box-shadow:0 12px 36px #22335522;max-width:520px;margin:20px}h1{color:#6258d8}a{color:#245dcc}button{padding:10px 15px;border:0;border-radius:9px;background:#6258d8;color:white;margin:10px 0}`);
-files.set("js/app.js",`document.querySelector('#hello')?.addEventListener('click',()=>{document.querySelector('#result').textContent='外部JavaScriptも動いています！ 🎉';});`);
+function seedStarter(){
+ files.set("index.html",starter);
+ files.set("about.html",about);
+ files.set("css/style.css",`body{font-family:system-ui,sans-serif;background:#edf2ff;color:#1f2937;min-height:100vh;display:grid;place-items:center;margin:0}.card{background:white;padding:32px;border-radius:18px;box-shadow:0 12px 36px #22335522;max-width:520px;margin:20px}h1{color:#6258d8}a{color:#245dcc}button{padding:10px 15px;border:0;border-radius:9px;background:#6258d8;color:white;margin:10px 0}`);
+ files.set("js/app.js",`document.querySelector('#hello')?.addEventListener('click',()=>{document.querySelector('#result').textContent='外部JavaScriptも動いています！ 🎉';});`);
+}
 function safePath(path){const parts=[];for(const part of path.replace(/\\/g,'/').split('/')){if(!part||part==='.')continue;if(part==='..'){parts.pop();continue;}parts.push(part);}return parts.join('/');}
 function dirname(path){const i=path.lastIndexOf('/');return i<0?'':path.slice(0,i+1);}
 function resolvePath(base,ref){try{const clean=ref.split(/[?#]/)[0];if(!clean)return base;return safePath((clean.startsWith('/')?'':dirname(base))+decodeURIComponent(clean));}catch(e){return safePath(dirname(base)+ref);}}
@@ -125,11 +127,19 @@ function renderTree(){
  $('fileStats').textContent=files.size+' files';
 }
 function renderTabs(){const tabs=$('tabs');tabs.innerHTML='';openTabs=openTabs.filter(n=>files.has(n));if(!openTabs.length){tabs.innerHTML='<div class="empty">ファイル未選択</div>';return;}openTabs.forEach(n=>{const b=document.createElement('button');b.className='tab'+(n===active?' active':'');b.textContent=n.split('/').pop();b.title=n;b.onclick=()=>selectFile(n);tabs.appendChild(b);});}
-function selectFile(path){if(!files.has(path))return;sync();active=path;if(!openTabs.includes(path))openTabs.push(path);$('code').value=isText(path)?files.get(path):'[このファイルはテキスト編集できません。プレビューでは読み込めます。]';$('code').readOnly=!isText(path);$('activePath').textContent=path;renderTree();renderTabs();}
-function sync(){if(active&&files.has(active)&&isText(active)&&!$('code').readOnly)files.set(active,$('code').value);}
-function addFile(path,content){path=safePath(path);if(!path)return;files.set(path,content);}
-function fileFromUpload(f){return new Promise(resolve=>{const path=safePath(f.webkitRelativePath||f.name);const r=new FileReader();r.onload=()=>{try{const value=isText(path)?new TextDecoder('utf-8').decode(r.result):r.result;addFile(path,value);resolve(path);}catch(err){console.error('ファイル読み込みエラー:',path,err);resolve(null);}};r.onerror=()=>{console.error('ファイル読み込みエラー:',path,r.error);resolve(null);};r.readAsArrayBuffer(f);});}
-async function upload(list){const arr=[...list];for(const f of arr)await fileFromUpload(f);if(arr.length){const first=safePath(arr[0].webkitRelativePath||arr[0].name);renderTree();if(files.has(first))selectFile(first);$('status').textContent=arr.length+'個のファイルを追加しました（テキストはUTF-8として読み込み）';}}
+let saveTimer=null;
+function openDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open('HTMLStudioWorkspace',1);req.onupgradeneeded=()=>req.result.createObjectStore('state');req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function persistWorkspace(){clearTimeout(saveTimer);saveTimer=setTimeout(async()=>{try{const db=await openDB();await new Promise((resolve,reject)=>{const tx=db.transaction('state','readwrite');tx.objectStore('state').put({entries:[...files.entries()],active,openTabs},'workspace');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});db.close();$('status').textContent='自動保存済み';}catch(err){console.error('自動保存に失敗:',err);$('status').textContent='保存に失敗しました';}},180);}
+async function flushWorkspace(){clearTimeout(saveTimer);try{const db=await openDB();await new Promise((resolve,reject)=>{const tx=db.transaction('state','readwrite');tx.objectStore('state').put({entries:[...files.entries()],active,openTabs},'workspace');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});db.close();}catch(err){console.error('終了前の保存に失敗:',err);}}
+window.addEventListener('pagehide',()=>{flushWorkspace();});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushWorkspace();});
+async function restoreWorkspace(){try{const db=await openDB();const saved=await new Promise((resolve,reject)=>{const req=db.transaction('state','readonly').objectStore('state').get('workspace');req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});db.close();if(saved&&Array.isArray(saved.entries)){files.clear();for(const [k,v] of saved.entries)files.set(k,v);active=files.has(saved.active)?saved.active:null;openTabs=Array.isArray(saved.openTabs)?saved.openTabs.filter(k=>files.has(k)):[];return true;}}catch(err){console.warn('保存データを復元できません:',err);}return false;}
+function selectFile(path){if(!files.has(path))return;sync();active=path;if(!openTabs.includes(path))openTabs.push(path);$('code').value=isText(path)?files.get(path):'[このファイルはテキスト編集できません。プレビューでは読み込めます。]';$('code').readOnly=!isText(path);$('activePath').textContent=path;renderTree();renderTabs();persistWorkspace();}
+function sync(){if(active&&files.has(active)&&isText(active)&&!$('code').readOnly){files.set(active,$('code').value);persistWorkspace();}}
+function addFile(path,content){path=safePath(path);if(!path||files.has(path))return false;files.set(path,content);persistWorkspace();return true;}
+function uniquePath(path){if(!files.has(path))return path;const dot=path.lastIndexOf('.'),base=dot>path.lastIndexOf('/')?path.slice(0,dot):path,ex=dot>path.lastIndexOf('/')?path.slice(dot):'';let i=2,candidate;do{candidate=base+' ('+i+++')'+ex;}while(files.has(candidate));return candidate;}
+function fileFromUpload(f){return new Promise(resolve=>{let path=safePath(f.webkitRelativePath||f.name);if(!path){resolve(null);return;}path=uniquePath(path);const r=new FileReader();r.onload=()=>{try{const value=isText(path)?new TextDecoder('utf-8').decode(r.result):r.result;addFile(path,value);resolve(path);}catch(err){console.error('ファイル読み込みエラー:',path,err);resolve(null);}};r.onerror=()=>{console.error('ファイル読み込みエラー:',path,r.error);resolve(null);};r.readAsArrayBuffer(f);});}
+async function upload(list){sync();const arr=[...list];let first=null,added=0;for(const f of arr){const path=await fileFromUpload(f);if(path){added++;if(!first)first=path;}}if(arr.length){renderTree();if(first)selectFile(first);$('status').textContent=added+'個追加しました。同名ファイルは別名で保存しました。';persistWorkspace();}}
 function clearUrls(){objectUrls.forEach(u=>URL.revokeObjectURL(u));objectUrls=[];}
 function makeUrl(path){const value=files.get(path);if(value===undefined)return null;const blob=value instanceof ArrayBuffer?new Blob([value],{type:mime(path)}):new Blob([value],{type:mime(path)});const url=URL.createObjectURL(blob);objectUrls.push(url);return url;}
 function mime(path){const e=ext(path);return ({html:'text/html',htm:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript',json:'application/json',svg:'image/svg+xml',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',txt:'text/plain',xml:'application/xml',woff:'font/woff',woff2:'font/woff2'})[e]||'application/octet-stream';}
@@ -172,11 +182,11 @@ function renderPage(path){
 function run(){const target=files.has('index.html')?'index.html':files.has('index.htm')?'index.htm':[...files.keys()].find(n=>['html','htm'].includes(ext(n)));if(target)renderPage(target);else $('status').textContent='HTMLファイルがありません';}
 $('preview').addEventListener('load',()=>{});
 window.addEventListener('message',e=>{if(e.source!==$('preview').contentWindow||e.data?.type!=='pg-navigate')return;renderPage(safePath(e.data.path));});
-$('code').addEventListener('input',()=>{sync();$('status').textContent='未保存の変更';});
+$('code').addEventListener('input',()=>{sync();$('status').textContent='保存中…';persistWorkspace();});
 $('openFiles').onclick=$('addFileBtn').onclick=()=>$('htmlInput').click();
 $('folderBtn').onclick=()=>{$('htmlInput').setAttribute('webkitdirectory','');$('htmlInput').click();setTimeout(()=>$('htmlInput').removeAttribute('webkitdirectory'),1000);};
 $('htmlInput').onchange=e=>{upload(e.target.files);e.target.value='';};
-$('newFile').onclick=$('createNew').onclick=()=>{if($('newDialog').classList.contains('open')){const n=safePath($('newName').value.trim());if(!n){alert('ファイル名を入力してください');return;}if(files.has(n)&&!confirm('同じ名前のファイルがあります。上書きしますか？'))return;addFile(n,n.endsWith('.html')?'<!doctype html>\n<html lang="ja"><head><meta charset="utf-8"><title>New page</title></head><body><h1>新しいページ</h1></body></html>':'');$('newDialog').classList.remove('open');$('newName').value='';renderTree();selectFile(n);return;}$('newDialog').classList.add('open');$('newName').focus();};
+$('newFile').onclick=$('createNew').onclick=()=>{if($('newDialog').classList.contains('open')){const n=safePath($('newName').value.trim());if(!n){alert('ファイル名を入力してください');return;}if(files.has(n)){alert('同じ名前のファイルが既にあります。別の名前にしてください。');return;}addFile(n,n.endsWith('.html')?'<!doctype html>\n<html lang="ja"><head><meta charset="utf-8"><title>New page</title></head><body><h1>新しいページ</h1></body></html>':'');$('newDialog').classList.remove('open');$('newName').value='';renderTree();selectFile(n);return;}$('newDialog').classList.add('open');$('newName').focus();};
 $('cancelNew').onclick=()=>$('newDialog').classList.remove('open');
 $('renameFile').onclick=()=>{
  if(!active)return;
@@ -191,11 +201,12 @@ $('confirmRename').onclick=()=>{
  const next=safePath($('renameName').value.trim());
  if(!next){alert('新しいファイル名を入力してください');return;}
  if(next===active){$('renameDialog').classList.remove('open');return;}
- if(files.has(next)&&!confirm('同じ名前のファイルがあります。上書きしますか？'))return;
+ if(files.has(next)){alert('同じ名前のファイルが既にあります。別の名前にしてください。');return;}
  sync();
  const content=files.get(active);
  files.delete(active);
  files.set(next,content);
+ persistWorkspace();
  openTabs=openTabs.map(n=>n===active?next:n);
  active=next;
  $('renameDialog').classList.remove('open');
@@ -204,7 +215,8 @@ $('confirmRename').onclick=()=>{
  $('status').textContent='名前を変更しました: '+next;
 };
 $('renameName').onkeydown=e=>{if(e.key==='Enter')$('confirmRename').click();if(e.key==='Escape')$('renameDialog').classList.remove('open');};
-$('deleteFile').onclick=()=>{if(!active)return;if(!confirm(active+' を削除しますか？'))return;files.delete(active);openTabs=openTabs.filter(n=>n!==active);active=openTabs[openTabs.length-1]||null;if(active)selectFile(active);else{$('code').value='';$('activePath').textContent='ファイルを選択してください';renderTabs();renderTree();}};
+$('deleteFile').onclick=()=>{if(!active)return;if(!confirm(active+' を削除しますか？'))return;files.delete(active);persistWorkspace();openTabs=openTabs.filter(n=>n!==active);active=openTabs[openTabs.length-1]||null;if(active)selectFile(active);else{$('code').value='';$('activePath').textContent='ファイルを選択してください';renderTabs();renderTree();}};
+$('clearAll').onclick=async()=>{if(!files.size){alert('削除するファイルがありません');return;}if(!confirm('プロジェクト内の全ファイルを削除します。元に戻せません。よろしいですか？'))return;files.clear();active=null;openTabs=[];$('code').value='';$('code').readOnly=false;$('activePath').textContent='ファイルを選択してください';$('preview').srcdoc='';renderTree();renderTabs();clearUrls();await flushWorkspace();$('status').textContent='すべてのファイルを削除しました';};
 $('saveFile').onclick=()=>{sync();if(!active)return;const value=files.get(active);const blob=new Blob([value],{type:mime(active)});const a=document.createElement('a');const u=URL.createObjectURL(blob);a.href=u;a.download=active.split('/').pop();a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);};
 $('exportZip').onclick=async()=>{sync();if(!window.JSZip){alert('ZIPライブラリを読み込めません。ネット接続を確認してください。');return;}try{const zip=new JSZip();for(const [n,v] of files)zip.file(n,v);const blob=await zip.generateAsync({type:'blob'});const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='website-project.zip';a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);$('status').textContent='ZIPを書き出しました';}catch(err){alert('ZIP出力に失敗: '+err.message);}};
 function search(){sync();const q=$('searchInput').value.toLowerCase(),box=$('searchResults');box.innerHTML='';if(!q){box.textContent='検索文字列を入力してください';return;}let count=0;for(const [name,value] of files){if(!isText(name)||value instanceof ArrayBuffer)continue;String(value).split(/\r?\n/).forEach((line,i)=>{let pos=line.toLowerCase().indexOf(q);if(pos<0)return;count++;const b=document.createElement('button');b.className='hit';b.textContent=name+' : '+(i+1)+'行目  '+line.trim().slice(0,100);b.onclick=()=>{selectFile(name);$('code').focus();$('code').setSelectionRange(Math.max(0,String(value).split(/\r?\n/).slice(0,i).join('\n').length+(i?1:0)+pos),Math.max(0,String(value).split(/\r?\n/).slice(0,i).join('\n').length+(i?1:0)+pos)+q.length);};box.appendChild(b);});}if(!count)box.textContent='見つかりませんでした';else{const s=document.createElement('div');s.textContent=count+'件';box.prepend(s);}}
@@ -212,7 +224,7 @@ $('searchBtn').onclick=search;$('searchInput').onkeydown=e=>{if(e.key==='Enter')
 $('runTop').onclick=$('refresh').onclick=run;
 function full(){document.body.classList.add('full');}function exitFull(){document.body.classList.remove('full');}
 $('fullTop').onclick=$('fullPreview').onclick=full;$('returnEdit').onclick=exitFull;document.addEventListener('keydown',e=>{if(e.key==='Escape')exitFull();});
-selectFile('index.html');renderTree();run();
+(async()=>{const restored=await restoreWorkspace();if(!restored)seedStarter();renderTree();if(active&&files.has(active))selectFile(active);else if(files.size)selectFile(files.keys().next().value);else{$('code').value='';$('activePath').textContent='ファイルを選択してください';renderTabs();}run();if(!restored)persistWorkspace();})();
 })();
 </script>
 </body>
