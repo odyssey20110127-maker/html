@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HTML Playground</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1020;color:#edf2ff;font:14px system-ui,sans-serif}header{padding:14px 18px;background:#111a2e;border-bottom:1px solid #2b3853;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.brand{font-size:18px;font-weight:bold}button{padding:9px 12px;border:1px solid #344461;border-radius:9px;background:#1b2946;color:#fff;cursor:pointer;margin:2px}button.primary{background:#8aa4ff;color:#10172b;font-weight:bold}main{padding:16px;max-width:1500px;margin:auto}h1{font-size:21px;margin:0 0 4px}p,.muted{color:#9aabc8;font-size:12px}.layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;min-height:70vh}.panel{display:flex;flex-direction:column;min-width:0;background:#121a2d;border:1px solid #2b3853;border-radius:12px;overflow:hidden}.head{padding:12px;border-bottom:1px solid #2b3853;font-weight:bold;display:flex;justify-content:space-between;align-items:center}.drop{margin:12px;padding:12px;text-align:center;border:1px dashed #53688e;border-radius:9px}.drop p{margin:4px}.drop button{margin-top:8px}textarea{margin:0 12px 12px;width:calc(100% - 24px);flex:1;min-height:300px;resize:vertical;background:#080d18;color:#e0e9ff;border:1px solid #344461;border-radius:9px;padding:12px;font:12px/1.6 monospace}iframe{width:100%;flex:1;min-height:420px;border:0;background:white}.controls,.previewcontrols{padding:0 10px 10px}.foot{padding:9px 12px;border-top:1px solid #2b3853;color:#9aabc8;font-size:11px}#file{display:none}body.full{overflow:hidden}body.full header,body.full .intro,body.full .editor,body.full .note{display:none}body.full main{padding:0;margin:0;max-width:none;width:100vw;height:100vh;height:100dvh}body.full .layout{display:block;width:100%;height:100%;min-height:0;margin:0}body.full .preview{display:flex;width:100%;height:100%;min-height:0;border:0;border-radius:0}body.full .preview .head,body.full .preview .previewcontrols,body.full .preview .foot{display:none}body.full iframe{display:block;width:100%;height:100%;min-height:0;flex:1;border:0}@media(max-width:800px){.layout{grid-template-columns:1fr}.editor{min-height:550px}iframe{min-height:55vh}header{align-items:flex-start;flex-direction:column}}
+body.full .return-editor{display:flex}
+.return-editor{display:none;position:fixed;right:12px;bottom:12px;z-index:9999;align-items:center;justify-content:center;gap:5px;width:58px;height:30px;padding:0;border:1px solid #ffffff55;border-radius:16px;background:#17233dcc;color:#fff;font:11px system-ui,sans-serif;opacity:.48;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 2px 10px #0003}
+.return-editor:active,.return-editor:focus-visible{opacity:1;outline:2px solid #8aa4ff;outline-offset:2px}
+@media(hover:hover){.return-editor:hover{opacity:1}}
+</style>
+</head>
+<body>
+<header><div class="brand">⌘ HTML Playground <span class="muted">HTML / CSS / JavaScript</span></div><div><button id="open">HTMLを開く</button><button id="save">HTMLを保存</button><button id="full" class="primary">⛶ フルスクリーン</button><button id="exit" hidden>全画面を終了</button></div></header>
+<main><div class="intro"><h1>HTMLを読み込んで実行</h1><p>ファイルを選択するか、コードを編集して実行・更新してください。</p></div>
+<div class="layout">
+<section class="panel editor"><div class="head">ソースコード <span class="muted" id="filename">サンプル.html</span></div><div class="drop" id="drop"><strong>HTMLファイルをここにドロップ</strong><p>.html / .htm に対応</p><button id="choose" class="primary">ファイルを選択</button></div><textarea id="code" spellcheck="false" aria-label="HTMLソースコード"></textarea><div class="controls"><button id="run" class="primary">▶ 実行・更新</button><button id="reset">サンプルに戻す</button><button id="clear">コードを消去</button></div></section>
+<section class="panel preview"><div class="head">プレビュー <span class="muted" id="status">準備完了</span></div><div class="previewcontrols"><button id="refresh">↻ 更新</button></div><iframe id="preview" title="HTMLプレビュー" sandbox="allow-scripts allow-forms allow-modals allow-popups" referrerpolicy="no-referrer"></iframe><div class="foot" id="last">ブラウザ内で実行されます</div></section>
+</div><p class="note">HTML内に書かれたCSS・JavaScriptは反映されます。別ファイルのCSS・JSや画像は、パスなどによって読み込めない場合があります。信頼できないコードは実行しないでください。</p></main>
+<button type="button" class="return-editor" id="returnEditor" aria-label="編集画面に戻る" title="編集画面に戻る">✎ 編集</button>
+<input id="file" type="file" accept=".html,.htm,text/html">
+<script>
+(function(){
+const sample = `<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>サンプル</title>
+<style>body{font-family:system-ui,sans-serif;min-height:100vh;margin:0;display:grid;place-items:center;background:linear-gradient(135deg,#dbeafe,#fce7f3);color:#222}.card{background:white;padding:32px;border-radius:20px;text-align:center;box-shadow:0 15px 40px #33415522;max-width:360px;margin:20px}h1{color:#6258d8}button{background:#6258d8;color:white;border:0;padding:12px 18px;border-radius:10px;cursor:pointer}body.full .return-editor{display:flex}
+.return-editor{display:none;position:fixed;right:12px;bottom:12px;z-index:9999;align-items:center;justify-content:center;gap:5px;width:58px;height:30px;padding:0;border:1px solid #ffffff55;border-radius:16px;background:#17233dcc;color:#fff;font:11px system-ui,sans-serif;opacity:.48;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 2px 10px #0003}
+.return-editor:active,.return-editor:focus-visible{opacity:1;outline:2px solid #8aa4ff;outline-offset:2px}
+@media(hover:hover){.return-editor:hover{opacity:1}}
+</style></head>
+<body><main class="card"><h1>こんにちは！ 👋</h1><p>HTML・CSS・JavaScriptが動いています。</p><button id="hello">クリックしてね</button><p id="result"></p></main>
+<script>document.querySelector('#hello').addEventListener('click',function(){document.querySelector('#result').textContent='JavaScriptも正常に動作中！ 🎉';});<\/script>
+</body></html>`;
+const $=id=>document.getElementById(id);let filename='サンプル.html';
+function run(){ $('preview').srcdoc=$('code').value;$('status').textContent='実行しました';$('last').textContent='最終更新: '+new Date().toLocaleTimeString('ja-JP');}
+function load(f){if(!f)return;if(!/\.html?$/i.test(f.name)&&f.type!=='text/html'){alert('HTMLファイルを選択してください');return;}const r=new FileReader();r.onload=()=>{$('code').value=String(r.result||'');filename=f.name;$('filename').textContent=filename;run();};r.onerror=()=>alert('読み込みに失敗しました');r.readAsText(f);}
+$('code').value=sample;run();$('open').onclick=$('choose').onclick=()=>$('file').click();$('file').onchange=e=>{load(e.target.files[0]);e.target.value='';};$('run').onclick=$('refresh').onclick=run;
+$('reset').onclick=()=>{$('code').value=sample;filename='サンプル.html';$('filename').textContent=filename;run();};
+$('clear').onclick=()=>{if(confirm('コードを空にしますか？')){$('code').value='';run();}};
+$('save').onclick=()=>{const a=document.createElement('a');const u=URL.createObjectURL(new Blob([$('code').value],{type:'text/html;charset=utf-8'}));a.href=u;a.download=filename||'index.html';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);};
+$('full').onclick=()=>{document.body.classList.add('full');$('full').hidden=true;$('exit').hidden=false;};
+function leaveFullscreen(){document.body.classList.remove('full');$('full').hidden=false;$('exit').hidden=true;}
+$('exit').onclick=leaveFullscreen;$('returnEditor').onclick=leaveFullscreen;
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();run();}if(e.key==='Escape')$('exit').click();});
+const d=$('drop');['dragenter','dragover'].forEach(t=>d.addEventListener(t,e=>{e.preventDefault();d.style.borderColor='#8aa4ff';}));['dragleave','drop'].forEach(t=>d.addEventListener(t,e=>{e.preventDefault();d.style.borderColor='';}));d.addEventListener('drop',e=>load(e.dataTransfer.files[0]));
+})();
+</script>
+</body></html>
